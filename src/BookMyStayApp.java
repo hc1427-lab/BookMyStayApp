@@ -1,38 +1,33 @@
 import java.util.*;
 
-// ================================
-// Book My Stay App - UC4
-// FIFO Booking using Queue
-// ================================
+// =======================================
+// Book My Stay App - UC5
+// Prevent Double Booking using HashSet
+// =======================================
 
 public class BookMyStayApp {
 
     public static void main(String[] args) {
 
-        System.out.println("===== Book My Stay - UC4 FIFO Booking =====");
+        System.out.println("===== Book My Stay - UC5 Double Booking Prevention =====");
 
-        // Create Inventory
         RoomInventory inventory = new RoomInventory();
-
-        // Create Booking Manager
         BookingManager bookingManager = new BookingManager(inventory);
 
-        // Add Booking Requests
+        // Booking Requests
         bookingManager.addBookingRequest("Rohan", "Single");
         bookingManager.addBookingRequest("Aryan", "Double");
-        bookingManager.addBookingRequest("Kiran", "Suite");
+        bookingManager.addBookingRequest("Rohan", "Suite");   // Duplicate customer
         bookingManager.addBookingRequest("Vijay", "Single");
 
-        // Process Bookings in FIFO order
         bookingManager.processBookings();
 
-        // Show Remaining Rooms
         inventory.displayInventory();
     }
 }
 
 // =====================================
-// UC3 - Centralized Room Inventory
+// Centralized Room Inventory
 // =====================================
 class RoomInventory {
 
@@ -40,7 +35,6 @@ class RoomInventory {
 
     public RoomInventory() {
         availability = new HashMap<>();
-
         availability.put("Single", 2);
         availability.put("Double", 1);
         availability.put("Suite", 1);
@@ -63,16 +57,18 @@ class RoomInventory {
 }
 
 // =====================================
-// UC4 - Booking Manager (FIFO Queue)
+// Booking Manager with HashSet
 // =====================================
 class BookingManager {
 
     private Queue<BookingRequest> requestQueue;
     private RoomInventory inventory;
+    private Set<String> confirmedCustomers;   // NEW
 
     public BookingManager(RoomInventory inventory) {
         this.inventory = inventory;
         requestQueue = new LinkedList<>();
+        confirmedCustomers = new HashSet<>();
     }
 
     public void addBookingRequest(String customerName, String roomType) {
@@ -88,7 +84,14 @@ class BookingManager {
 
             BookingRequest request = requestQueue.poll();
 
+            // Check duplicate booking
+            if (confirmedCustomers.contains(request.customerName)) {
+                System.out.println("Booking rejected for " + request.customerName + " (Duplicate Booking)");
+                continue;
+            }
+
             if (inventory.bookRoom(request.roomType)) {
+                confirmedCustomers.add(request.customerName);
                 System.out.println("Booking confirmed for " + request.customerName);
             } else {
                 System.out.println("Booking failed for " + request.customerName + " (No rooms available)");
